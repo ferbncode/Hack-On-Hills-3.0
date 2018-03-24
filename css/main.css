@@ -1,0 +1,12 @@
+
+.container {
+	margin: 0 !important;
+	padding: 0 !important;	
+}
+
+.form {
+	width: 640px;
+	height: 480px;
+	margin: auto;
+	padding: 20px;
+}
