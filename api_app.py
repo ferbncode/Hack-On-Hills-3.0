@@ -2,12 +2,15 @@ from flask import Flask, Response
 from flask import jsonify
 from flask import request
 from flask import render_template_string
+from split import Job, divideData, Pool
 from flask_cors import CORS, cross_origin
+from queue import Queue
 import random
 import string
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['SECRET_KEY'] = 'this is the secreet key'
 
 @app.route("/")
 @cross_origin()
@@ -100,5 +103,83 @@ def result(id):
     print(data_result)
     return 'hELO'
 
-app.run(host='127.0.0.1',port=5001,debug=True)
 
+job_queue = Queue()
+current_job = None
+
+@app.route('/job', methods=['POST'])
+def add_job():
+    request_body = request.get_json()
+    print(request_body)
+    job = Job(request_body['data'], request_body['code'])
+    job_queue.put(job)
+    print(job)
+    return jsonify({
+        "message": "the job has been queued."
+    })
+
+# We do a more discrete division for the array elements
+# for systems with Lesser Ram
+@app.route('/pool', methods=['GET'])
+@cross_origin()
+def get_from_pool():
+    global current_job
+    global job_queue
+    if not current_job:
+        current_job = job_queue.get()
+    try:
+        partitioned_job = current_job.division.pool.getTopJob()
+    except Exception as e:
+        return jsonify({
+            "message": "No more jobs in the pool",
+        })
+
+    r = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(11)])
+
+    data_text = partitioned_job['data']
+    unique_id = partitioned_job['id']
+    code = partitioned_job['code']
+    # data_text = 'suyash garg'
+    # unique_id = r
+    # code = """data_fixed = data.split(' ').join('');"""
+
+    with open('static/'+r+'.js', 'w') as f:
+        f.write(f"""
+            console.log('this is a sample.js file');
+            console.log('this is line 2 of file');
+            data = "{data_text}";
+            {code}
+            console.log(data_fixed);
+            id = "{unique_id}";
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "http://localhost:5001/api/postresult/"+id, true);
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send("result="+data_fixed);
+        \n"""+code_is_alive)
+
+    data = {
+        'id': unique_id,
+        'url': 'http://localhost:5001/static/'+r+'.js',
+        'name': 'Join user names'
+    }
+    json_data = jsonify(data)
+    return json_data
+    # return jsonify(partitioned_job)
+
+
+@app.route('/pool', methods=['POST'])
+@cross_origin()
+def post_to_pool():
+    data = request.get_json()
+    current_job.merge_results(data)
+    print(f"Completed stuff here! - Here is the result - {data}")
+
+
+@app.route('/job', methods=['GET'])
+@cross_origin()
+def gandu_function():
+    return jsonify({
+        "message": "jab job khatam ho jaayegi to post kar denge?",
+    })
+
+app.run(host='127.0.0.1',port=5001,debug=True)
