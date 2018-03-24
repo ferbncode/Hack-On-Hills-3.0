@@ -118,6 +118,7 @@ def add_job():
         "message": "the job has been queued."
     })
 
+
 # We do a more discrete division for the array elements
 # for systems with Lesser Ram
 @app.route('/pool', methods=['GET'])
@@ -136,7 +137,8 @@ def get_from_pool():
 
     r = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(11)])
 
-    data_text = partitioned_job['data']
+    import json
+    data_text = json.dumps(partitioned_job['data'])
     unique_id = partitioned_job['id']
     code = partitioned_job['code']
     # data_text = 'suyash garg'
@@ -147,7 +149,8 @@ def get_from_pool():
         f.write(f"""
             console.log('this is a sample.js file');
             console.log('this is line 2 of file');
-            data = "{data_text}";
+            data = JSON.parse('{data_text}');
+            console.log(data);
             {code}
             console.log(data_fixed);
             id = "{unique_id}";
@@ -164,7 +167,6 @@ def get_from_pool():
     }
     json_data = jsonify(data)
     return json_data
-    # return jsonify(partitioned_job)
 
 
 @app.route('/pool', methods=['POST'])
