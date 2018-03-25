@@ -10,8 +10,6 @@ def hello():
     <title>hello1</title>
     <body>Hello world 1 site
         <script type="text/javascript" src="static/client.js"></script>
-	<script>
-        </script>
     </body>
     </html>""")
 

@@ -9,6 +9,7 @@ class Job:
         }
         self.pool = Pool()
         self.data = data
+        self.name = ''
         self.code = code
         self.quantum = 5
         self.job_id = ''.join([random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(6)])

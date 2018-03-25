@@ -64,6 +64,7 @@ def add_job():
     request_body = request.get_json()
     print(request_body)
     job = Job(request_body['data'], request_body['code'])
+    job.name = request_body['name']
     job_queue.put(job)
     job_hash[job.job_id] = job
     print(job)
@@ -168,7 +169,7 @@ def result(message):
       print(job_id, sub_job_id)
       job_hash[job_id].add_result(data, sub_job_id)
       if job_hash[job_id].status == "complete":
-        with open(f'{job_id}.csv', 'w') as f:
+        with open(f'static/results/{job_id}.csv', 'w') as f:
           for item in job_hash[job_id].finished_data:
             f.write(f"{item}\n")
       print(f"Completed stuff here! - Here is the result - {data}")
@@ -177,6 +178,24 @@ def result(message):
   except:
       pass
   return ''
+
+@app.route('/list')
+def getAlljobs():
+    print('JOB HASH VALUES')
+    print(job_hash)
+    return render_template_string("""
+        <html>
+        <title>All jobs</title>
+        <body>List of all jobs: <br><br>
+        {% for job in job_hash %}
+        {{ job }}   -   {{ job_hash[job]['name'] }}    -    {{ job_hash[job].status }}  - {{ job_hash[job].completed_ids | length }} out of {{ job_hash[job].sub_job_ids | length}} 
+        {% if job_hash[job].status == "complete" %}
+        <a href="static/results/{{job}}.csv"> Result </a><br>
+        {% endif %}
+        {% endfor %}
+        </body>
+        </html>
+    """, job_hash = job_hash)
 
 @sio.on('currentstatus')
 def status_update(message):

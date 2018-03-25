@@ -59,8 +59,7 @@ socket.on('connect', function() {
                 doingJob = false;
                 myWorker.terminate();
   }
-  myWorker.onmessageerror = function(e) {
-    console.log('Error message received from worker');
+  myWorker.onmessageerror = function(e) { console.log('Error message received from worker');
   }
   myWorker.onerror = function(e) {
     console.log('Error received from worker');
