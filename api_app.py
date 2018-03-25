@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, render_template, redirect
 from flask import jsonify
 from flask import request
 from flask import render_template_string
@@ -16,10 +16,31 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SECRET_KEY'] = 'this is the secreet key'
 sio = SocketIO(app)
 
-# active_connections = 
+# active_connections =
     # {'socketId': 'running/available'}
-# 
+#
 active_connections = {}
+
+
+@app.route("/add", methods=['GET', 'POST'])
+def indd():
+    if request.method == 'POST':
+        data = []
+        job_name = request.form['jobname']
+        print(job_name)
+        task_type = request.form['tasktype']
+        print(task_type)
+        print(request.files)
+        if 'file' in request.files:
+            file = request.files['file']
+            for line in file.readlines():
+                line = line.decode('utf-8').strip()
+                data.append(line.split(','))
+        criterias = None
+
+        pre(task_type, data, job_name, criterias=criterias)
+        return redirect('/list')
+    return render_template('index.html')
 
 
 @app.route("/")
@@ -46,7 +67,7 @@ def generate_code(op_type, criterias):
     # op_type - filter by, data cleaning, remove space etc.
     # data = [[1, "Bimal", 3], [9, "Suyash", 1], [3, "Utkarsh", 1]]
     if op_type == "filter":
-        # criteria = [{"col": "0", "operator": "<=", "value": "9", "typeval": "number"}, 
+        # criteria = [{"col": "0", "operator": "<=", "value": "9", "typeval": "number"},
         #             {"col": "1", "operator": "==", "value": "Suyash", "typeval": "string"}]
         criterias = str(criterias);
         code = """ criterias = """ + criterias + """ ;
@@ -75,7 +96,7 @@ def generate_code(op_type, criterias):
                         case ">":
                             res = (val > reqvalue);
                             break;
-                    } 
+                    }
                     if (res === false) {
                         break;
                     }
@@ -87,6 +108,18 @@ def generate_code(op_type, criterias):
         print(code)
     return code
 
+
+def pre(op_type, data, job_name, criterias=None):
+    if op_type == 'mergenames':
+        code = "data_fixed = data.map(function(item, index) { return item.split(' ').join(''); });"
+    if op_type == 'filterby':
+        code = generate_code(
+            op_type='filter',
+            criterias=criterias,
+        )
+    custom_add_job(data, code, job_name)
+
+
 @app.route('/prejob', methods=['POST'])
 def pre_job():
     request_body = request.get_json()
@@ -97,13 +130,15 @@ def pre_job():
             op_type="filter",
             criterias=criterias
         )
-    print("HERE")   
+    print("HERE")
     data = request_body["data"]
-    custom_add_job(data, code)
+    name = request_body["name"]
+    custom_add_job(data, code, name)
     return jsonify({"message": "job has been created"})
 
-def custom_add_job(data, code):
+def custom_add_job(data, code, name):
     job = Job(data, code)
+    job.name = name
     job_queue.put(job)
     job_hash[job.job_id] = job
     print(job)
@@ -239,7 +274,7 @@ def getAlljobs():
         <title>All jobs</title>
         <body>List of all jobs: <br><br>
         {% for job in job_hash %}
-        {{ job }}   -   {{ job_hash[job]['name'] }}    -    {{ job_hash[job].status }}  - {{ job_hash[job].completed_ids | length }} out of {{ job_hash[job].sub_job_ids | length}} 
+        {{ job }}   -   {{ job_hash[job]['name'] }}    -    {{ job_hash[job].status }}  - {{ job_hash[job].completed_ids | length }} out of {{ job_hash[job].sub_job_ids | length}}
         {% if job_hash[job].status == "complete" %}
         <a href="static/results/{{job}}.csv"> Result </a><br>
         {% endif %}

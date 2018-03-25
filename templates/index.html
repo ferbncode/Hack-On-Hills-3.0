@@ -16,7 +16,7 @@
         <div class="ten wide column container">
 		<div class="form">
 			<h3>Add a Job</h3>
-			<form class="ui form" method="POST" action="/prejob">
+            <form class="ui form" method="POST" action="/add" enctype="multipart/form-data">
                 <div class="field">
 				<label>Job Name:</label>
 				<input type="text" name="jobname" placeholder="Enter Job Name">
@@ -29,6 +29,7 @@
 					<select class="form-select ui fluid dropdown" name="tasktype" placeholer="Select Task Type">
 						<option value="none">Nothing</option>
 						<option value="filterby">Filter By</option>
+                        <option value="mergenames">Merge Names </option>
 					</select>
 				</div>
 
@@ -36,7 +37,7 @@
 				<br>
 
 				<label>Data Upload: </label>
-				<input type="file">
+                <input type="file" name="file">
 
 				<br>
 				<br>
