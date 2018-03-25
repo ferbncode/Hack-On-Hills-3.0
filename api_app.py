@@ -81,10 +81,14 @@ def sampleCode():
             data_fixed = data.split(' ').join('');
             console.log(data_fixed);
             id = "{unique_id}";
+            data = {
+                "data": data_fixed,
+                "id": id
+            }
             var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", "http://localhost:5001/api/postresult/"+id, true);
+            xhttp.open("POST", "http://localhost:5001/pool", true);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhttp.send("result="+data_fixed);
+            xhttp.send("result="+data);
         \n"""+code_is_alive)
 
     data = {
@@ -95,17 +99,18 @@ def sampleCode():
     json_data = jsonify(data)
     return json_data
 
-@app.route('/api/postresult/<id>',methods=['POST'])
-@cross_origin()
-def result(id):
-    data_result = request.form['result']
-    print('result computed for : ', id)
-    print(data_result)
-    return 'hELO'
+# @app.route('/api/postresult/<id>',methods=['POST'])
+# @cross_origin()
+# def result(id):
+    # data_result = request.form['result']
+    # print('result computed for : ', id)
+    # print(data_result)
+    # return 'hELO'
 
 
 job_queue = Queue()
 current_job = None
+job_hash = {}
 
 @app.route('/job', methods=['POST'])
 def add_job():
@@ -113,6 +118,7 @@ def add_job():
     print(request_body)
     job = Job(request_body['data'], request_body['code'])
     job_queue.put(job)
+    job_hash[job.job_id] = job
     print(job)
     return jsonify({
         "message": "the job has been queued."
@@ -126,7 +132,7 @@ def add_job():
 def get_from_pool():
     global current_job
     global job_queue
-    if not current_job:
+    if not current_job or current_job.status == "complete":
         current_job = job_queue.get()
     try:
         partitioned_job = current_job.division.pool.getTopJob()
@@ -155,7 +161,7 @@ def get_from_pool():
             console.log(data_fixed);
             id = "{unique_id}";
             var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", "http://localhost:5001/api/postresult/"+id, true);
+            xhttp.open("POST", "http://localhost:5001/pool/"+id, true);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xhttp.send("result="+data_fixed);
         \n"""+code_is_alive)
@@ -169,12 +175,24 @@ def get_from_pool():
     return json_data
 
 
-@app.route('/pool', methods=['POST'])
+@app.route('/pool/<id>', methods=['POST'])
 @cross_origin()
-def post_to_pool():
-    data = request.get_json()
-    current_job.merge_results(data)
+def post_to_pool(id):
+    data = request.form['result'].split(',')
+    print(data)
+    print(type(data))
+    print(id)
+    job_id = id.split(" - ")[0]
+    sub_job_id = id.split(" - ")[1]
+    print(job_id, sub_job_id)
+    job_hash[job_id].add_result(data, sub_job_id)
+    if job_hash[job_id].status == "complete":
+        with open(f'{job_id}.csv', 'w') as f:
+            for item in job_hash[job_id].finished_data:
+                f.write(f"{item}\n")
+
     print(f"Completed stuff here! - Here is the result - {data}")
+    return jsonify({"message": "Thanks for the result!"})
 
 
 @app.route('/job', methods=['GET'])
