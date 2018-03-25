@@ -116,27 +116,78 @@ current_job = None
 job_hash = {}
 
 
+def generate_code(op_type, criterias):
+    # op_type - filter by, data cleaning, remove space etc.
+    # data = [[1, "Bimal", 3], [9, "Suyash", 1], [3, "Utkarsh", 1]]
+    if op_type == "filter":
+        # criteria = [{"col": "0", "operator": "<=", "value": "9", "typeval": "number"}, 
+        #             {"col": "1", "operator": "==", "value": "Suyash", "typeval": "string"}]
+        criterias = str(criterias);
+        code = """ criterias = """ + criterias + """ ;
+            data_fixed = data.filter(function(element) {
+                let res = true;
+                for (let criteria of criterias) {
+                    let val =  element[Number(criteria["col"])];
+                    let reqvalue = criteria["value"];
+                    if (criteria["typeval"] == "number") {
+                        reqvalue = Number(reqvalue);
+                    }
+                    let operator = (criteria["operator"]);
+                    switch(operator) {
+                        case "==":
+                            res = (val === reqvalue);
+                            break;
+                        case ">=":
+                            res = (val >= reqvalue);
+                            break;
+                        case "<=":
+                            res = (val <= reqvalue);
+                            break;
+                        case "<":
+                            res = (val < reqvalue);
+                            break;
+                        case ">":
+                            res = (val > reqvalue);
+                            break;
+                    } 
+                    if (res === false) {
+                        break;
+                    }
+                }
+                return res;
+            });
+            console.log("Processed Data: ", data_fixed);
+        """
+        print(code)
+    return code
+
 @app.route('/prejob', methods=['POST'])
 def pre_job():
     request_body = request.get_json()
-    print(request_body)
-    if request_body['type'] == "filter":
-        column = request_body["column"]
-        criteria = request_body["criteria"]
-        code = somewhere.generate_code(
-            type="filter",
-            column=column,
-            criteria=critieria
+    # op_type: filter, critierias: [{'typeval', 'operator', 'col', 'value'}]
+    if request_body['op_type'] == "filter":
+        criterias = request_body["criterias"]
+        code = generate_code(
+            op_type="filter",
+            criterias=criterias
         )
-    r = requests.post('127.0.0.1:5001/job', data = {
-        "data": request_body["data"],
-        "code": request_body["code"],
-    })
+    print("HERE")   
+    data = request_body["data"]
+    custom_add_job(data, code)
+    return jsonify({"message": "job has been created"})
 
+
+def custom_add_job(data, code):
+    job = Job(data, code)
+    job_queue.put(job)
+    job_hash[job.job_id] = job
+    print(job)
 
 @app.route('/job', methods=['POST'])
 def add_job():
+    print("DDKFDKFJDKJFDL")
     request_body = request.get_json()
+    print(request_body)
     print(request_body)
     job = Job(request_body['data'], request_body['code'])
     job_queue.put(job)
