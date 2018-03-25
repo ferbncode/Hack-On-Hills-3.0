@@ -15,12 +15,28 @@ class Job:
         self.division = divideData(self.data, self.quantum, self.code, self.job_id)
         self.division.dividePopulatePool()
         self.completed = []
+        self.completed_ids = []
+        self.sub_job_ids = [x['id'].split(" - ")[1] for x in self.division.pool.pool]
+        self.status = "Incomplete"
+        self.finished_data = []
 
 
-    def merge_results(self, data):
-        if data['id'] in self.completed:
+    def add_result(self, data, id):
+        """Returns if the job is complete"""
+        if id in self.completed_ids:
             return
         self.completed.append(data)
+        self.completed_ids.append(id)
+        if self.completed_ids == self.sub_job_ids:
+            self.status = "complete"
+            self.merge_results()
+            return True
+        return False
+
+
+    def merge_results(self):
+        for processed_data in self.completed:
+            self.finished_data.extend(processed_data)
 
 
     def print_merge_results(self):
@@ -41,7 +57,7 @@ class Pool:
     def __init__(self):
         self.pool = []
         self.top_count = 0
-        self.top_max = 3
+        self.top_max = 1
 
 
     def insertIntoPool(self, data_job):
@@ -60,7 +76,7 @@ class Pool:
     def getTopJob(self):
         if self.pool:
             self.top_count += 1
-            if self.top_count > self.top_max:
+            if self.top_count >- self.top_max:
                 self.top_count = 0
                 job = self.popFromPool()
             else:
