@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title%}Jobs{% endblock %}
+
+{% block head %}
+
+{{super()}}
+
+
+{% endblock %}
+
+{%block body%}
+          <div class="ui grid" style="position: relative; top:50px;">
+              <div class="row">
+                  <div class="three wide column"></div>
+        <div class="ten wide column container">
+		<div class="form">
+			<h3>Add a Job</h3>
+			<form class="ui form" method="POST" action="/prejob">
+                <div class="field">
+				<label>Job Name:</label>
+				<input type="text" name="jobname" placeholder="Enter Job Name">
+                </div>
+				<br>
+				<br>
+
+				<div class="select-form">
+					<label>Type of Task:</label>
+					<select class="form-select ui fluid dropdown" name="tasktype" placeholer="Select Task Type">
+						<option value="none">Nothing</option>
+						<option value="filterby">Filter By</option>
+					</select>
+				</div>
+
+				<br>
+				<br>
+
+				<label>Data Upload: </label>
+				<input type="file">
+
+				<br>
+				<br>
+
+				<input type="submit" class="ui button" value="Submit">
+			</form>
+        </div>
+        </div>
+              </div>
+
+
+
+	<script src="/static/jquery/jquery-3.3.1.min.js"></script>
+	<script src="/static/javascript/main.js"></script>
+
+{% endblock %}
