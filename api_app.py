@@ -5,12 +5,14 @@ from flask import render_template_string
 from split import Job, divideData, Pool
 from flask_cors import CORS, cross_origin
 from queue import Queue
+import requests
 import random
 import string
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SECRET_KEY'] = 'this is the secreet key'
+
 
 @app.route("/")
 @cross_origin()
@@ -46,6 +48,7 @@ code_is_alive = """
 def api():
     return "This is the motherfucking api!"
 
+
 @app.route("/api/running/<id>")
 @cross_origin()
 def is_running(id):
@@ -57,12 +60,12 @@ def is_running(id):
     print(request);
     return json_data
 
+
 @app.route("/api/running/<id>/false")
 def false_id(id):
     data = {
         'status': 0
     }
-
 
 
 @app.route("/api/sample1")
@@ -111,6 +114,25 @@ def sampleCode():
 job_queue = Queue()
 current_job = None
 job_hash = {}
+
+
+@app.route('/prejob', methods=['POST'])
+def pre_job():
+    request_body = request.get_json()
+    print(request_body)
+    if request_body['type'] == "filter":
+        column = request_body["column"]
+        criteria = request_body["criteria"]
+        code = somewhere.generate_code(
+            type="filter",
+            column=column,
+            criteria=critieria
+        )
+    r = requests.post('127.0.0.1:5001/job', data = {
+        "data": request_body["data"],
+        "code": request_body["code"],
+    })
+
 
 @app.route('/job', methods=['POST'])
 def add_job():
