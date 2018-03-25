@@ -83,6 +83,7 @@ def add_job():
 
 @sio.on('givemejob')
 def job_from_pool(message):
+    import json
     global current_job
     global job_queue
     if not current_job or current_job.status == "complete":
@@ -90,13 +91,12 @@ def job_from_pool(message):
     try:
         partitioned_job = current_job.division.pool.getTopJob()
     except Exception as e:
-        return jsonify({
+        return json.dumps({
             "message": "No more jobs in the pool",
         })
 
     r = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(11)])
 
-    import json
     data_text = json.dumps(partitioned_job['data'])
     unique_id = partitioned_job['id']
     code = partitioned_job['code']
@@ -128,7 +128,8 @@ def job_from_pool(message):
 @app.route('/pool/<id>', methods=['POST'])
 @cross_origin()
 def post_to_pool(id):
-    data = request.form['result'].split(',')
+    data = request.form['data_fixed']
+    id = request.form['id']
     print(data)
     print(type(data))
     print(id)
@@ -153,10 +154,28 @@ def end_function():
 
 @sio.on('postingresult')
 def result(message):
-  print('getting result from socket')
-  current_job.merge_results(message)
-  print(f"Completed stuff here! - Here is the result - {message}")
-  print(message)
+  try:
+      print('getting result from socket')
+      print(message)
+      print(f"Completed stuff here! - Here is the result - {message}")
+      data = message['data_fixed']
+      id = message['id']
+      print(data)
+      print(type(data))
+      print(id)
+      job_id = id.split(" - ")[0]
+      sub_job_id = id.split(" - ")[1]
+      print(job_id, sub_job_id)
+      job_hash[job_id].add_result(data, sub_job_id)
+      if job_hash[job_id].status == "complete":
+        with open(f'{job_id}.csv', 'w') as f:
+          for item in job_hash[job_id].finished_data:
+            f.write(f"{item}\n")
+      print(f"Completed stuff here! - Here is the result - {data}")
+      return json.dumps({'status': 'success'})
+
+  except:
+      pass
   return ''
 
 @sio.on('currentstatus')
