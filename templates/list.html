@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title%}List of Jobs{% endblock %}
+{% block head %}
+{{super()}}
+{% endblock %}
+{%block body%}
+  <div class="ui grid" style="position: relative; top:50px;">
+      <div class="row">
+          <div class="three wide column"></div>
+           <div class="ten wide column">
+               <table class="ui celled striped table">
+                 <thead>
+                   <tr><th colspan="3">
+                     List of Jobs
+                   </th>
+                 </tr></thead>
+                 <tbody>
+                   {% for job in job_hash %}
+                   <tr>
+                     <td class="collapsing">
+                         <i class="process icon"></i> {{job}} - {{ job_hash[job]['name'] }}
+                     </td>
+                     <td>{{job_hash[job].status}}</td>
+                     <td>{{job_hash[job].completed_ids | length }} out of {{ job_hash[job].sub_job_ids | length }}</td>
+                     <td class="right aligned collapsing">
+                       {% if job_hash[job].status == "complete" %}
+                         <a href="static/results/{{job}}.csv"> Result </a><br>
+                       {% else %}
+                           Waiting for result
+
+                  {% endif %}
+                         </td>
+                   </tr>
+                       {% endfor %}
+
+                 </tbody>
+               </table>
+        </div>
+    </div>
+  </div>
+{% endblock %}

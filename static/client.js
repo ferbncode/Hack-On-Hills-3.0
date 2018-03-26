@@ -21,7 +21,7 @@ socket.on('connect', function() {
       doingJob = true;
     });
   }
-  // using network timing api 
+  // using network timing api
   setInterval(function() {
     logicalProcessors = window.navigator.hardwareConcurrency
     const netPerf = window.performance.timing;
@@ -31,8 +31,8 @@ socket.on('connect', function() {
     console.log('Page load time: ', pageLoadTime);
     console.log('Connect time: ', connectTime);
     console.log('Render time: ', renderTime);
-    socket.emit('currentstatus', { 
-      running: 'true', 
+    socket.emit('currentstatus', {
+      running: 'true',
       processors: logicalProcessors,
       os: window.navigator.oscpu
     });
@@ -40,7 +40,7 @@ socket.on('connect', function() {
   socket.on('pool job', function(data) {
     json_object = JSON.parse(data);
     const name = json_object.name;
-    const url = json_object.url; 
+    const url = json_object.url;
     console.log('Running job for process: ', name);
     var head = document.getElementsByTagName('head').item(0);
     function createWorker (workerUrl) {
@@ -54,7 +54,7 @@ socket.on('connect', function() {
     }
   let myWorker = createWorker(url);
   myWorker.onmessage = function(e) {
-                socket.emit('postingresult', e.data); 
+                socket.emit('postingresult', e.data);
     console.log('Message received from worker');
                 doingJob = false;
                 myWorker.terminate();
