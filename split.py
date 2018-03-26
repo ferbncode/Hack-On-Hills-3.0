@@ -1,7 +1,9 @@
 import string
 import random
 
+
 class Job:
+
     def __init__(self, data, code):
         job = {
             'data': data,
@@ -21,7 +23,6 @@ class Job:
         self.status = "Incomplete"
         self.finished_data = []
 
-
     def add_result(self, data, id):
         """Returns if the job is complete"""
         if id in self.completed_ids:
@@ -34,16 +35,13 @@ class Job:
             return True
         return False
 
-
     def merge_results(self):
         for processed_data in self.completed:
             self.finished_data.extend(processed_data)
 
-
     def print_merge_results(self):
         for data in self.completed:
             print(data)
-
 
     def __repr__(self):
         out = ''
@@ -60,10 +58,8 @@ class Pool:
         self.top_count = 0
         self.top_max = 1
 
-
     def insertIntoPool(self, data_job):
         self.pool.append(data_job)
-
 
     def popFromPool(self):
         if self.pool:
@@ -72,7 +68,6 @@ class Pool:
             return job
         else:
             raise Exception("Pool is presently empty!!")
-
 
     def getTopJob(self):
         if self.pool:
@@ -90,14 +85,12 @@ class Pool:
 class divideData:
 
     def __init__(self, data, quantum, code, job_id):
-        """Data fed here should be loadable to memory"""
         self.pool = Pool()
         self.data = data
         self.data_size = len(data)
         self.quantum = quantum
         self.map_code = code
         self.job_id = job_id
-
 
     def dividePopulatePool(self):
         """An element of pool is a dictionary containing the data, and
@@ -110,7 +103,6 @@ class divideData:
                 'code': self.map_code,
             }
             self.pool.insertIntoPool(partition_dict)
-
 
     def returnPool(self):
         return self.pool
